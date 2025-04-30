@@ -1,0 +1,32 @@
+{
+  "name": "react-user-tracking",
+  "version": "0.1.0",
+  "description": "Simple tracking library for React applications",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "tracking",
+    "analytics"
+  ],
+  "author": "Taylor Lohman",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^4.9.0"
+  }
+}
