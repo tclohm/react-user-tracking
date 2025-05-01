@@ -46,9 +46,22 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
     };
   }, []);
 
+  function debounce(func: Function, wait: number) {
+    let timeout: ReturnType<typeof SetTimeout>;
+    return function(...args: any[]) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  }
+
+  const trackEvent = useCallback(
+    debounce((eventType: string, data?: Partial<TrackingEvent>) => {
+    return trackingService.track(eventType, data);
+  }, 300), []);
+
   // Context value
   const value: TrackingContextType = {
-    trackEvent: trackingService.track.bind(trackingService),
+    trackEvent: trackEvent, // trackingService.track.bind(trackingService),
     events,
     sessionId: trackingService.sessionId
   };

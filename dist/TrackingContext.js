@@ -36,9 +36,23 @@ export function TrackingProvider(_a) {
             trackingService.track = originalTrack;
         };
     }, []);
+    function debounce(func, wait) {
+        var timeout;
+        return function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            clearTimeout(timeout);
+            timeout = setTimeout(function () { return func.apply(void 0, args); }, wait);
+        };
+    }
+    var trackEvent = useCallback(debounce(function (eventType, data) {
+        return trackingService.track(eventType, data);
+    }, 300), []);
     // Context value
     var value = {
-        trackEvent: trackingService.track.bind(trackingService),
+        trackEvent: trackEvent,
         events: events,
         sessionId: trackingService.sessionId
     };
