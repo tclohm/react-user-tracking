@@ -1,12 +1,3 @@
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import trackingService from './trackingService';
 var TrackingContext = createContext(null);
@@ -14,15 +5,31 @@ var TrackingContext = createContext(null);
 export function TrackingProvider(_a) {
     var children = _a.children;
     var _b = useState([]), events = _b[0], setEvents = _b[1];
+    function throttle(func, limit) {
+        var inThrottle;
+        var lastResult;
+        return function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var context = this;
+            if (!inThrottle) {
+                inThrottle = true;
+                lastResult = func.apply(context, args);
+                setTimeout(function () { return (inThrottle = false); }, limit);
+            }
+            return lastResult;
+        };
+    }
+    var throttledTrackEvent = useCallback(throttle(function (eventType, data) {
+        return trackingService.track(eventType, data);
+    }, 300), []);
     // Override the track method to update our local state
     useEffect(function () {
         var originalTrack = trackingService.track.bind(trackingService);
         trackingService.track = function (eventType, data) {
-            // Call the original method
-            var event = originalTrack(eventType, data);
-            // Update our local state with latest events
-            setEvents(function (prev) { return __spreadArray([event], prev, true).slice(0, 50); });
-            return event;
+            return throttledTrackEvent(eventType, data);
         };
         // Track initial page view
         if (typeof window !== 'undefined') {
@@ -35,24 +42,10 @@ export function TrackingProvider(_a) {
         return function () {
             trackingService.track = originalTrack;
         };
-    }, []);
-    function debounce(func, wait) {
-        var timeout;
-        return function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            clearTimeout(timeout);
-            timeout = setTimeout(function () { return func.apply(void 0, args); }, wait);
-        };
-    }
-    var trackEvent = useCallback(debounce(function (eventType, data) {
-        return trackingService.track(eventType, data);
-    }, 300), []);
+    }, [throttledTrackEvent]);
     // Context value
     var value = {
-        trackEvent: trackEvent,
+        trackEvent: throttledTrackEvent,
         events: events,
         sessionId: trackingService.sessionId
     };

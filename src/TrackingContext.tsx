@@ -19,17 +19,36 @@ interface TrackingProviderProps {
 export function TrackingProvider({ children }: TrackingProviderProps): JSX.Element {
   const [events, setEvents] = useState<TrackingEvent[]>([]);
 
+  function throttle<T extends (...args: any[]) => any>(
+    func: T,
+    limit: number
+  ): (...args: Parameters<T>) => ReturnType<T> {
+    let inThrottle: boolean;
+    let lastResult: ReturnType<T>;
+
+    return function(this: any, ...args: Parameters<T>): ReturnType<T> {
+      const context = this;
+      if (!inThrottle) {
+        inThrottle = true;
+        lastResult = func.apply(context, args);
+        setTimeout(() => (inThrottle = false), limit);
+      }
+      return lastResult;
+    };
+  }
+
+  const throttledTrackEvent = useCallback(
+    throttle((eventType: string, data?: Partial<TrackingEvent>) => {
+      return trackingService.track(eventType, data);
+    }, 300),
+    []
+  );
+
   // Override the track method to update our local state
   useEffect(() => {
     const originalTrack = trackingService.track.bind(trackingService);
     trackingService.track = (eventType: string, data?: Partial<TrackingEvent>) => {
-      // Call the original method
-      const event = originalTrack(eventType, data);
-
-      // Update our local state with latest events
-      setEvents(prev => [event, ...prev].slice(0, 50));
-
-      return event;
+      return throttledTrackEvent(eventType, data);
     };
 
     // Track initial page view
@@ -44,24 +63,11 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
     return () => {
       trackingService.track = originalTrack;
     };
-  }, []);
-
-  function debounce(func: Function, wait: number) {
-    let timeout: ReturnType<typeof setTimeout>;
-    return function(...args: any[]) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  }
-
-  const trackEvent = useCallback(
-    debounce((eventType: string, data?: Partial<TrackingEvent>) => {
-    return trackingService.track(eventType, data);
-  }, 300), []);
+  }, [throttledTrackEvent]);
 
   // Context value
   const value: TrackingContextType = {
-    trackEvent: trackEvent, // trackingService.track.bind(trackingService),
+    trackEvent: throttledTrackEvent, // trackingService.track.bind(trackingService),
     events,
     sessionId: trackingService.sessionId
   };
