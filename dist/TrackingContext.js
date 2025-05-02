@@ -1,3 +1,12 @@
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import trackingService from './trackingService';
 var TrackingContext = createContext(null);
@@ -22,8 +31,13 @@ export function TrackingProvider(_a) {
             return lastResult;
         };
     }
+    var trackEventWithState = useCallback(function (eventType, data) {
+        var event = trackingService.track(eventType, data);
+        setEvents(function (prev) { return __spreadArray(__spreadArray([], prev, true), [event], false); });
+        return event;
+    }, []);
     var throttledTrackEvent = useCallback(throttle(function (eventType, data) {
-        return trackingService.track(eventType, data);
+        return trackEventWithState(eventType, data);
     }, 300), []);
     // Override the track method to update our local state
     useEffect(function () {
