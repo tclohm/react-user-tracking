@@ -37,9 +37,15 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
     };
   }
 
+  const trackEventWithState = useCallback((eventType: string, data?: Partial<TrackingEvent>) => {
+    const event = trackingService.track(eventType, data);
+    setEvents(prev => [...prev, event]);
+    return event;
+  }, []);
+
   const throttledTrackEvent = useCallback(
     throttle((eventType: string, data?: Partial<TrackingEvent>) => {
-      return trackingService.track(eventType, data);
+      return trackEventWithState(eventType, data);
     }, 300),
     []
   );
