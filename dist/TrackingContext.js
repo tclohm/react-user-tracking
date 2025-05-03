@@ -7,60 +7,62 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import trackingService from './trackingService';
 var TrackingContext = createContext(null);
 // Provider component
 export function TrackingProvider(_a) {
     var children = _a.children;
     var _b = useState([]), events = _b[0], setEvents = _b[1];
-    function throttle(func, limit) {
-        var inThrottle;
-        var lastResult;
-        return function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            var context = this;
-            if (!inThrottle) {
-                inThrottle = true;
-                lastResult = func.apply(context, args);
-                setTimeout(function () { return (inThrottle = false); }, limit);
-            }
-            return lastResult;
-        };
-    }
-    var trackEventWithState = useCallback(function (eventType, data) {
-        var event = trackingService.track(eventType, data);
+    //function throttle<T extends (...args: any[]) => any>(
+    //  func: T,
+    //  limit: number
+    //): (...args: Parameters<T>) => ReturnType<T> {
+    //  let inThrottle: boolean;
+    //  let lastResult: ReturnType<T>;
+    //
+    //  return function(this: any, ...args: Parameters<T>): ReturnType<T> {
+    //    const context = this;
+    //    if (!inThrottle) {
+    //      inThrottle = true;
+    //      lastResult = func.apply(context, args);
+    //      setTimeout(() => (inThrottle = false), limit);
+    //    }
+    //    return lastResult;
+    //  };
+    //}
+    // avoid recursion
+    var originalTrack = useRef(trackingService.track.bind(trackingService));
+    var trackEvent = useCallback(function (eventType, data) {
+        var event = originalTrack.current(eventType, data);
         setEvents(function (prev) {
             console.log("Adding event to state", event);
             return __spreadArray(__spreadArray([], prev, true), [event], false);
         });
         return event;
     }, []);
-    var throttledTrackEvent = trackEventWithState;
+    // const throttledTrackEvent = trackEventWithState;
     // Override the track method to update our local state
     useEffect(function () {
-        var originalTrack = trackingService.track.bind(trackingService);
-        trackingService.track = function (eventType, data) {
-            return throttledTrackEvent(eventType, data);
-        };
+        //const originalTrack = trackingService.track.bind(trackingService);
+        //trackingService.track = (eventType: string, data?: Partial<TrackingEvent>) => {
+        //  return throttledTrackEvent(eventType, data);
+        //};
         // Track initial page view
         if (typeof window !== 'undefined') {
-            trackingService.track('pageview', {
+            trackEvent('pageview', {
                 title: document.title,
                 referrer: document.referrer
             });
         }
         // Clean up
-        return function () {
-            trackingService.track = originalTrack;
-        };
-    }, [throttledTrackEvent]);
+        //return () => {
+        //  trackingService.track = originalTrack;
+        //};
+    }, [trackEvent]);
     // Context value
     var value = {
-        trackEvent: throttledTrackEvent,
+        trackEvent: trackEvent,
         events: events,
         sessionId: trackingService.sessionId
     };
