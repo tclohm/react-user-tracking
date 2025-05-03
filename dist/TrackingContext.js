@@ -35,10 +35,7 @@ export function TrackingProvider(_a) {
     var originalTrack = useRef(trackingService.track.bind(trackingService));
     var trackEvent = useCallback(function (eventType, data) {
         var event = originalTrack.current(eventType, data);
-        setEvents(function (prev) {
-            console.log("Adding event to state", event);
-            return __spreadArray(__spreadArray([], prev, true), [event], false);
-        });
+        setEvents(function (prev) { return __spreadArray(__spreadArray([], prev, true), [event], false); });
         return event;
     }, []);
     // const throttledTrackEvent = trackEventWithState;

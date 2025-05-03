@@ -38,12 +38,10 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
   
   // avoid recursion
   const originalTrack = useRef(trackingService.track.bind(trackingService));
+
   const trackEvent = useCallback((eventType: string, data?: Partial<TrackingEvent>) => {
     const event = originalTrack.current(eventType, data);
-    setEvents(prev => {
-      console.log("Adding event to state", event);
-      return [...prev, event]
-    });
+    setEvents(prev => [...prev, event]);
     return event;
   }, []);
 
