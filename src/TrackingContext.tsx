@@ -39,17 +39,14 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
 
   const trackEventWithState = useCallback((eventType: string, data?: Partial<TrackingEvent>) => {
     const event = trackingService.track(eventType, data);
-    setEvents(prev => [...prev, event]);
+    setEvents(prev => {
+      console.log("Adding event to state", event);
+      return [...prev, event]
+    });
     return event;
   }, []);
 
-  const throttledTrackEvent = useCallback(
-    throttle((eventType: string, data?: Partial<TrackingEvent>) => {
-      return trackEventWithState(eventType, data);
-    }, 300),
-    []
-  );
-
+  const throttledTrackEvent = trackEventWithState;
   // Override the track method to update our local state
   useEffect(() => {
     const originalTrack = trackingService.track.bind(trackingService);
