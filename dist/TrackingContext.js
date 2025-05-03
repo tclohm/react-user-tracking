@@ -33,12 +33,13 @@ export function TrackingProvider(_a) {
     }
     var trackEventWithState = useCallback(function (eventType, data) {
         var event = trackingService.track(eventType, data);
-        setEvents(function (prev) { return __spreadArray(__spreadArray([], prev, true), [event], false); });
+        setEvents(function (prev) {
+            console.log("Adding event to state", event);
+            return __spreadArray(__spreadArray([], prev, true), [event], false);
+        });
         return event;
     }, []);
-    var throttledTrackEvent = useCallback(throttle(function (eventType, data) {
-        return trackEventWithState(eventType, data);
-    }, 300), []);
+    var throttledTrackEvent = trackEventWithState;
     // Override the track method to update our local state
     useEffect(function () {
         var originalTrack = trackingService.track.bind(trackingService);
