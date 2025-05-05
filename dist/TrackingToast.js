@@ -1,182 +1,151 @@
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
         }
-        return t;
-    };
-    return __assign.apply(this, arguments);
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 import React, { useState, useEffect } from 'react';
-import { useTracking } from './TrackingContext';
-// Simple SVG icons
-var EyeIcon = function () { return (React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-    React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
-    React.createElement("circle", { cx: "12", cy: "12", r: "3" }))); };
-var ClockIcon = function () { return (React.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-    React.createElement("circle", { cx: "12", cy: "12", r: "10" }),
-    React.createElement("polyline", { points: "12 6 12 12 16 14" }))); };
-var ClickIcon = function () { return (React.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-    React.createElement("path", { d: "M2 12h2M7 12h2M12 12h2M17 12h2M22 12h2M12 2v2M12 7v2M12 17v2M12 22v2" }))); };
-var DeviceIcon = function () { return (React.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-    React.createElement("rect", { x: "2", y: "6", width: "20", height: "12", rx: "2" }),
-    React.createElement("path", { d: "M12 16a2 2 0 0 0 0-4 2 2 0 0 0 0 4z" }))); };
+import { useTracking } from './TrackingContext.ts';
+import '../styles/TrackingToast.css';
 export default function TrackingToast(_a) {
-    var _b, _c;
-    var _d = _a.privacyUrl, privacyUrl = _d === void 0 ? '/privacy' : _d;
-    var _e = useTracking(), events = _e.events, sessionId = _e.sessionId;
-    var _f = useState(true), visible = _f[0], setVisible = _f[1];
-    var _g = useState(false), expanded = _g[0], setExpanded = _g[1];
-    var _h = useState(0), timeSpent = _h[0], setTimeSpent = _h[1];
+    var _b = _a.privacyUrl, privacyUrl = _b === void 0 ? '/privacy' : _b;
+    var _c = useTracking(), events = _c.events, sessionId = _c.sessionId;
+    var _d = useState(true), visible = _d[0], setVisible = _d[1];
+    var _e = useState(false), expanded = _e[0], setExpanded = _e[1];
+    var _f = useState(0), timeSpent = _f[0], setTimeSpent = _f[1];
+    var _g = useState(Date.now()), currentTime = _g[0], setCurrentTime = _g[1];
+    // Update current time for relative timestamps
+    useEffect(function () {
+        var timer = setInterval(function () {
+            setCurrentTime(Date.now());
+        }, 10000); // Update every 10 seconds
+        return function () { return clearInterval(timer); };
+    }, []);
     // Time counter for "time on page"
     useEffect(function () {
-        if (typeof window === 'undefined')
-            return;
-        var timer = window.setInterval(function () {
+        var timer = setInterval(function () {
             setTimeSpent(function (prev) { return prev + 1; });
         }, 1000);
-        return function () { return window.clearInterval(timer); };
+        return function () { return clearInterval(timer); };
     }, []);
     var formatTime = function (seconds) {
         var mins = Math.floor(seconds / 60);
         var secs = seconds % 60;
         return "".concat(mins < 10 ? '0' + mins : mins, ":").concat(secs < 10 ? '0' + secs : secs);
     };
-    if (!visible)
-        return null;
-    // Count clicks
-    var clickCount = events.filter(function (e) { return e.eventType === 'click'; }).length;
-    // Get device type
-    var deviceType = ((_c = (_b = events[0]) === null || _b === void 0 ? void 0 : _b.device) === null || _c === void 0 ? void 0 : _c.type) || 'desktop';
-    // Base styles
-    var styles = {
-        container: {
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '12px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-            zIndex: 9999,
-            maxWidth: '300px',
-            fontSize: '14px'
-        },
-        header: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px'
-        },
-        title: {
-            display: 'flex',
-            alignItems: 'center',
-            fontWeight: 'bold'
-        },
-        icon: {
-            marginRight: '8px',
-            color: '#ff6b6b'
-        },
-        button: {
-            background: 'none',
-            border: 'none',
-            color: '#aaa',
-            cursor: 'pointer',
-            padding: '0'
-        },
-        timeInfo: {
-            fontSize: '12px',
-            color: '#ddd',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            marginBottom: '6px'
-        },
-        section: {
-            marginTop: '8px',
-            marginBottom: '8px',
-            backgroundColor: 'rgba(50, 50, 50, 0.5)',
-            padding: '8px',
-            borderRadius: '4px',
-            fontSize: '12px'
-        },
-        actionList: {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px'
-        },
-        actionItem: {
-            display: 'flex',
-            borderBottom: '1px solid #444',
-            paddingBottom: '4px'
-        },
-        stats: {
-            marginTop: '12px',
-            paddingTop: '8px',
-            borderTop: '1px solid #444',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            fontSize: '12px'
-        },
-        footer: {
-            gridColumn: '1 / span 2',
-            marginTop: '6px',
-            fontSize: '11px',
-            color: '#888'
+    // Format absolute timestamp
+    var formatTimestamp = function (timestamp) {
+        var date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
+    // Format relative timestamp
+    var getRelativeTime = function (timestamp) {
+        var seconds = Math.floor((currentTime - timestamp) / 1000);
+        if (seconds < 5)
+            return 'just now';
+        if (seconds < 60)
+            return "".concat(seconds, " seconds ago");
+        var minutes = Math.floor(seconds / 60);
+        if (minutes === 1)
+            return '1 minute ago';
+        if (minutes < 60)
+            return "".concat(minutes, " minutes ago");
+        var hours = Math.floor(minutes / 60);
+        if (hours === 1)
+            return '1 hour ago';
+        if (hours < 24)
+            return "".concat(hours, " hours ago");
+        return formatTimestamp(timestamp);
+    };
+    // Get event icon based on type
+    var getEventIcon = function (eventType) {
+        switch (eventType) {
+            case 'pageview': return '🔍';
+            case 'click': return '👆';
+            case 'form_submit': return '📝';
+            default: return '🔔';
         }
     };
-    return (React.createElement("div", { className: "tracking-toast-container", style: styles.container },
-        React.createElement("div", { style: styles.header },
-            React.createElement("div", { style: styles.title },
-                React.createElement("span", { style: styles.icon },
-                    React.createElement(EyeIcon, null)),
+    // Get event type class
+    var getEventTypeClass = function (eventType) {
+        switch (eventType) {
+            case 'pageview': return 'tracking-toast-event-pageview';
+            case 'click': return 'tracking-toast-event-click';
+            case 'form_submit': return 'tracking-toast-event-form_submit';
+            default: return 'tracking-toast-event-custom';
+        }
+    };
+    if (!visible)
+        return null;
+    // Count events
+    var clickCount = events.filter(function (e) { return e.eventType === 'click'; }).length;
+    var pageViewCount = events.filter(function (e) { return e.eventType === 'pageview'; }).length;
+    // Get most recent events first (reversed)
+    var recentEvents = __spreadArray([], events, true).reverse();
+    return (React.createElement("div", { className: "tracking-toast-container" },
+        React.createElement("div", { className: "tracking-toast-header" },
+            React.createElement("div", { className: "tracking-toast-title" },
+                React.createElement("span", { className: "tracking-toast-title-icon" }, "\uD83D\uDC41\uFE0F"),
                 "We are tracking you"),
-            React.createElement("div", { style: { display: 'flex', gap: '8px' } },
-                React.createElement("button", { onClick: function () { return setExpanded(!expanded); }, style: styles.button }, expanded ? 'Less' : 'More'),
-                React.createElement("button", { onClick: function () { return setVisible(false); }, style: __assign(__assign({}, styles.button), { fontSize: '18px' }) }, "\u00D7"))),
-        React.createElement("div", { style: styles.timeInfo },
-            React.createElement(ClockIcon, null),
-            React.createElement("span", null,
-                "Time on page: ",
-                formatTime(timeSpent))),
-        expanded && (React.createElement("div", { style: styles.section },
-            React.createElement("div", { style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    marginBottom: '6px',
-                    color: '#aaa'
-                } },
-                React.createElement("span", null, "Recent Activity")),
-            events.length === 0 ? (React.createElement("div", { style: { fontStyle: 'italic', color: '#777' } }, "No actions recorded yet")) : (React.createElement("div", { style: styles.actionList }, events.slice(0, 5).map(function (event, index) {
-                var _a, _b;
-                return (React.createElement("div", { key: event.eventId || index, style: styles.actionItem },
-                    React.createElement("span", { style: {
-                            minWidth: '60px',
-                            color: event.eventType === 'click' ? '#4dabf7' : '#12b886'
-                        } },
-                        event.eventType,
-                        ":"),
-                    React.createElement("span", { style: { flex: 1, color: '#ddd' } },
-                        ((_a = event.target) === null || _a === void 0 ? void 0 : _a.tagName) || '',
-                        ((_b = event.target) === null || _b === void 0 ? void 0 : _b.id) ? "#".concat(event.target.id) : '')));
-            }))))),
-        expanded && (React.createElement("div", { style: styles.stats },
-            React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-                React.createElement(ClickIcon, null),
+            React.createElement("div", null,
+                React.createElement("button", { onClick: function () { return setExpanded(!expanded); }, className: "tracking-toast-button" }, expanded ? 'Less' : 'More'),
+                React.createElement("button", { onClick: function () { return setVisible(false); }, className: "tracking-toast-button tracking-toast-close-button" }, "\u00D7"))),
+        React.createElement("div", { className: "tracking-toast-time" },
+            React.createElement("div", { className: "tracking-toast-time-container" },
+                React.createElement("span", { className: "tracking-toast-time-icon" }, "\u23F1\uFE0F"),
                 React.createElement("span", null,
+                    "Time on page: ",
+                    formatTime(timeSpent)))),
+        expanded && (React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "tracking-toast-section" },
+                React.createElement("div", { className: "tracking-toast-section-header" },
+                    React.createElement("span", null, "ACTIVITY LOG"),
+                    React.createElement("span", { className: "tracking-toast-event-count" },
+                        events.length,
+                        " events")),
+                React.createElement("div", { className: "tracking-toast-scroll-container" }, recentEvents.length === 0 ? (React.createElement("div", { className: "tracking-toast-no-events" }, "NO EVENTS RECORDED")) : (React.createElement(React.Fragment, null, recentEvents.map(function (event, index) {
+                    var _a, _b, _c, _d;
+                    return (React.createElement("div", { key: event.eventId || index, className: "tracking-toast-event ".concat(getEventTypeClass(event.eventType)) },
+                        React.createElement("div", { className: "tracking-toast-event-header" },
+                            React.createElement("span", { className: "tracking-toast-event-type" },
+                                React.createElement("span", null, getEventIcon(event.eventType)),
+                                event.eventType),
+                            React.createElement("span", { className: "tracking-toast-event-time" }, getRelativeTime(event.timestamp))),
+                        React.createElement("div", { className: "tracking-toast-event-details" }, event.eventType === 'pageview' ? (React.createElement("div", null,
+                            React.createElement("div", { className: "tracking-toast-event-property" },
+                                React.createElement("span", { className: "tracking-toast-event-label" }, "path: "),
+                                React.createElement("span", { className: "tracking-toast-event-value" }, ((_a = event.metadata) === null || _a === void 0 ? void 0 : _a.path) || event.url || '/')),
+                            event.title && (React.createElement("div", { className: "tracking-toast-event-property" },
+                                React.createElement("span", { className: "tracking-toast-event-label" }, "title: "),
+                                React.createElement("span", { className: "tracking-toast-event-value" }, event.title))))) : (React.createElement("div", null,
+                            React.createElement("div", { className: "tracking-toast-event-property" },
+                                React.createElement("span", { className: "tracking-toast-event-label" }, "element: "),
+                                React.createElement("span", { className: "tracking-toast-event-value" },
+                                    ((_b = event.target) === null || _b === void 0 ? void 0 : _b.tagName) || 'element',
+                                    ((_c = event.target) === null || _c === void 0 ? void 0 : _c.category) ? " [".concat(event.target.category, "]") : '')),
+                            ((_d = event.target) === null || _d === void 0 ? void 0 : _d.label) && (React.createElement("div", { className: "tracking-toast-event-property" },
+                                React.createElement("span", { className: "tracking-toast-event-label" }, "label: "),
+                                React.createElement("span", { className: "tracking-toast-event-value" }, event.target.label))))))));
+                }))))),
+            React.createElement("div", { className: "tracking-toast-stats" },
+                React.createElement("div", { className: "tracking-toast-stat" },
+                    React.createElement("span", { className: "tracking-toast-stat-icon", style: { color: '#4dabf7' } }, "\uD83D\uDC46"),
                     "Clicks: ",
-                    clickCount)),
-            React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-                React.createElement(DeviceIcon, null),
-                React.createElement("span", null,
-                    "Device: ",
-                    deviceType)),
-            React.createElement("div", { style: styles.footer },
-                "Data collected to improve your experience.",
-                React.createElement("a", { href: privacyUrl, style: { color: '#4dabf7', marginLeft: '4px' } }, "Privacy Policy"))))));
+                    clickCount),
+                React.createElement("div", { className: "tracking-toast-stat" },
+                    React.createElement("span", { className: "tracking-toast-stat-icon", style: { color: '#12b886' } }, "\uD83D\uDD0D"),
+                    "Pages: ",
+                    pageViewCount),
+                React.createElement("div", { className: "tracking-toast-stat" },
+                    React.createElement("span", { className: "tracking-toast-stat-icon", style: { color: '#aaa' } }, "\uD83D\uDCBB"),
+                    "Device: desktop"),
+                React.createElement("div", { className: "tracking-toast-stat" },
+                    React.createElement("span", { className: "tracking-toast-stat-icon", style: { color: '#aaa' } }, "\uD83C\uDD94"),
+                    "Session: ",
+                    sessionId.substring(0, 8)),
+                React.createElement("div", { className: "tracking-toast-privacy-link" },
+                    React.createElement("a", { href: privacyUrl }, "PRIVACY POLICY")))))));
 }
