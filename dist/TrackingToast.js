@@ -8,8 +8,8 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 import React, { useState, useEffect } from 'react';
-import { useTracking } from './TrackingContext.ts';
-import '../styles/TrackingToast.css';
+import { useTracking } from './TrackingContext';
+import './TrackingToast.css';
 export default function TrackingToast(_a) {
     var _b = _a.privacyUrl, privacyUrl = _b === void 0 ? '/privacy' : _b;
     var _c = useTracking(), events = _c.events, sessionId = _c.sessionId;
