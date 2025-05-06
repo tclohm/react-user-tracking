@@ -14,37 +14,14 @@ var TrackingContext = createContext(null);
 export function TrackingProvider(_a) {
     var children = _a.children;
     var _b = useState([]), events = _b[0], setEvents = _b[1];
-    //function throttle<T extends (...args: any[]) => any>(
-    //  func: T,
-    //  limit: number
-    //): (...args: Parameters<T>) => ReturnType<T> {
-    //  let inThrottle: boolean;
-    //  let lastResult: ReturnType<T>;
-    //
-    //  return function(this: any, ...args: Parameters<T>): ReturnType<T> {
-    //    const context = this;
-    //    if (!inThrottle) {
-    //      inThrottle = true;
-    //      lastResult = func.apply(context, args);
-    //      setTimeout(() => (inThrottle = false), limit);
-    //    }
-    //    return lastResult;
-    //  };
-    //}
-    // avoid recursion
     var originalTrack = useRef(trackingService.track.bind(trackingService));
     var trackEvent = useCallback(function (eventType, data) {
         var event = originalTrack.current(eventType, data);
         setEvents(function (prev) { return __spreadArray(__spreadArray([], prev, true), [event], false); });
         return event;
     }, []);
-    // const throttledTrackEvent = trackEventWithState;
     // Override the track method to update our local state
     useEffect(function () {
-        //const originalTrack = trackingService.track.bind(trackingService);
-        //trackingService.track = (eventType: string, data?: Partial<TrackingEvent>) => {
-        //  return throttledTrackEvent(eventType, data);
-        //};
         // Track initial page view
         if (typeof window !== 'undefined') {
             trackEvent('pageview', {
@@ -52,10 +29,6 @@ export function TrackingProvider(_a) {
                 referrer: document.referrer
             });
         }
-        // Clean up
-        //return () => {
-        //  trackingService.track = originalTrack;
-        //};
     }, [trackEvent]);
     // Context value
     var value = {
@@ -115,6 +88,96 @@ export function useClickTracking(ref, category, label) {
         element.addEventListener('click', handleClick);
         return function () { return element.removeEventListener('click', handleClick); };
     }, [ref, category, label, trackEvent]);
+}
+// Enhanced hook to track clicks with more detailed position data
+export function useEnhancedClickTracking(ref, category, label, pageIdentifier // Add page identifier for heat mapping
+) {
+    var trackEvent = useTracking().trackEvent;
+    useEffect(function () {
+        if (!ref.current || typeof window === 'undefined')
+            return;
+        var element = ref.current;
+        var handleClick = function (e) {
+            // Get element dimensions and position
+            var rect = element.getBoundingClientRect();
+            // Calculate relative position within the element (percentage)
+            var relativeX = ((e.clientX - rect.left) / rect.width) * 100;
+            var relativeY = ((e.clientY - rect.top) / rect.height) * 100;
+            // Calculate position relative to the page
+            var pageX = e.pageX;
+            var pageY = e.pageY;
+            // Calculate position relative to the viewport
+            var viewportX = e.clientX;
+            var viewportY = e.clientY;
+            trackEvent('click', {
+                target: {
+                    tagName: element.tagName.toLowerCase(),
+                    id: element.id || '',
+                    category: category,
+                    label: label,
+                    width: rect.width,
+                    height: rect.height,
+                    pageIdentifier: pageIdentifier || window.location.pathname
+                },
+                position: {
+                    x: e.clientX,
+                    y: e.clientY,
+                    pageX: pageX,
+                    pageY: pageY,
+                    viewportX: viewportX,
+                    viewportY: viewportY,
+                    relativeX: relativeX,
+                    relativeY: relativeY,
+                    viewportWidth: window.innerWidth,
+                    viewportHeight: window.innerHeight,
+                    scrollX: window.scrollX,
+                    scrollY: window.scrollY
+                }
+            });
+        };
+        element.addEventListener('click', handleClick);
+        return function () { return element.removeEventListener('click', handleClick); };
+    }, [ref, category, label, pageIdentifier, trackEvent]);
+}
+// global click tracking for heat maps
+export function usePageHeatMapTracking(pageIdentifier) {
+    var trackEvent = useTracking().trackEvent;
+    useEffect(function () {
+        if (typeof window === 'undefined')
+            return;
+        var handleClick = function (e) {
+            var _a;
+            // Only track clicks on the page body, not on interactive elements
+            if (e.target instanceof HTMLButtonElement ||
+                e.target instanceof HTMLInputElement ||
+                e.target instanceof HTMLAnchorElement ||
+                e.target instanceof HTMLSelectElement ||
+                e.target instanceof HTMLTextAreaElement) {
+                return; // Skip interactive elements as they'll be tracked separately
+            }
+            var targetElement = e.target;
+            trackEvent('heatmap_click', {
+                target: {
+                    tagName: ((_a = targetElement === null || targetElement === void 0 ? void 0 : targetElement.tagName) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || 'unknown',
+                    id: (targetElement === null || targetElement === void 0 ? void 0 : targetElement.id) || '',
+                    className: (targetElement === null || targetElement === void 0 ? void 0 : targetElement.className) || '',
+                    pageIdentifier: pageIdentifier || window.location.pathname
+                },
+                position: {
+                    x: e.clientX,
+                    y: e.clientY,
+                    pageX: e.pageX,
+                    pageY: e.pageY,
+                    viewportWidth: window.innerWidth,
+                    viewportHeight: window.innerHeight,
+                    scrollX: window.scrollX,
+                    scrollY: window.scrollY
+                }
+            });
+        };
+        document.body.addEventListener('click', handleClick);
+        return function () { return document.body.removeEventListener('click', handleClick); };
+    }, [pageIdentifier, trackEvent]);
 }
 // Track form submissions
 export function useFormTracking(formRef, formName) {

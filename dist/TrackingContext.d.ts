@@ -12,5 +12,7 @@ export declare function TrackingProvider({ children }: TrackingProviderProps): J
 export declare function useTracking(): TrackingContextType;
 export declare function usePageViewTracking(path?: string): void;
 export declare function useClickTracking(ref: React.RefObject<HTMLElement>, category?: string, label?: string): void;
+export declare function useEnhancedClickTracking(ref: React.RefObject<HTMLElement>, category?: string, label?: string, pageIdentifier?: string): void;
+export declare function usePageHeatMapTracking(pageIdentifier?: string): void;
 export declare function useFormTracking(formRef: React.RefObject<HTMLFormElement>, formName: string): void;
 export {};

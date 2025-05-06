@@ -27,6 +27,7 @@ export interface TargetData {
         type: string;
         hasValue: boolean;
     }>;
+    target?: TrackingEvent;
 }
 export interface DeviceData {
     type: 'desktop' | 'mobile' | 'tablet';
