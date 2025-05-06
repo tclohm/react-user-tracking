@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import './TrackingToast.css';
+import '/index.css';
 interface TrackingToastProps {
     privacyUrl?: string;
 }
