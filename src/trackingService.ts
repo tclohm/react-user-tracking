@@ -7,6 +7,12 @@ export interface TrackingConfig {
 export interface PositionData {
   x: number;
   y: number;
+  pageX?: number;           // page-relative coordinates
+  pageY?: number;           // page-relative coordinates
+  viewportX?: number;       // viewport-relative coordinates
+  viewportY?: number;       // viewport-relative coordinates
+  relativeX?: number;       // element-relative coordinates
+  relativeY?: number;       // element-relative coordinates
   viewportWidth?: number;
   viewportHeight?: number;
   scrollX?: number;
@@ -17,6 +23,7 @@ export interface TargetData {
   tagName?: string;
   id?: string;
   class?: string;
+  className?: string; //  DOM element compatibility
   // Form-specific properties
   formName?: string;
   formId?: string;
@@ -26,9 +33,14 @@ export interface TargetData {
   category?: string;
   label?: string;
   value?: number;
+  // Heat map specific properties
+  pageIdentifier?: string; //  heat map tracking
+  width?: number;          //  element dimensions
+  height?: number;         //  element dimensions
   // Form fields
   fields?: Array<{name: string; type: string; hasValue: boolean}>;
-}
+  // Needed for nested targets
+  target?: TrackingEvent;  // nested event references
 
 export interface DeviceData {
   type: 'desktop' | 'mobile' | 'tablet';
