@@ -18,25 +18,7 @@ interface TrackingProviderProps {
 // Provider component
 export function TrackingProvider({ children }: TrackingProviderProps): JSX.Element {
   const [events, setEvents] = useState<TrackingEvent[]>([]);
-  //function throttle<T extends (...args: any[]) => any>(
-  //  func: T,
-  //  limit: number
-  //): (...args: Parameters<T>) => ReturnType<T> {
-  //  let inThrottle: boolean;
-  //  let lastResult: ReturnType<T>;
-  //
-  //  return function(this: any, ...args: Parameters<T>): ReturnType<T> {
-  //    const context = this;
-  //    if (!inThrottle) {
-  //      inThrottle = true;
-  //      lastResult = func.apply(context, args);
-  //      setTimeout(() => (inThrottle = false), limit);
-  //    }
-  //    return lastResult;
-  //  };
-  //}
-  
-  // avoid recursion
+
   const originalTrack = useRef(trackingService.track.bind(trackingService));
 
   const trackEvent = useCallback((eventType: string, data?: Partial<TrackingEvent>) => {
@@ -45,14 +27,9 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
     return event;
   }, []);
 
-  // const throttledTrackEvent = trackEventWithState;
   // Override the track method to update our local state
   useEffect(() => {
-    //const originalTrack = trackingService.track.bind(trackingService);
-    //trackingService.track = (eventType: string, data?: Partial<TrackingEvent>) => {
-    //  return throttledTrackEvent(eventType, data);
-    //};
-
+ 
     // Track initial page view
     if (typeof window !== 'undefined') {
       trackEvent('pageview', {
@@ -61,15 +38,11 @@ export function TrackingProvider({ children }: TrackingProviderProps): JSX.Eleme
       });
     }
 
-    // Clean up
-    //return () => {
-    //  trackingService.track = originalTrack;
-    //};
   }, [trackEvent]);
 
   // Context value
   const value: TrackingContextType = {
-    trackEvent, // trackingService.track.bind(trackingService),
+    trackEvent, 
     events,
     sessionId: trackingService.sessionId
   };
@@ -143,6 +116,113 @@ export function useClickTracking(
     element.addEventListener('click', handleClick);
     return () => element.removeEventListener('click', handleClick);
   }, [ref, category, label, trackEvent]);
+}
+
+// Enhanced hook to track clicks with more detailed position data
+export function useEnhancedClickTracking(
+  ref: React.RefObject<HTMLElement>,
+  category?: string,
+  label?: string,
+  pageIdentifier?: string // Add page identifier for heat mapping
+): void {
+  const { trackEvent } = useTracking();
+
+  useEffect(() => {
+    if (!ref.current || typeof window === 'undefined') return;
+
+    const element = ref.current;
+    const handleClick = (e: MouseEvent) => {
+      // Get element dimensions and position
+      const rect = element.getBoundingClientRect();
+      
+      // Calculate relative position within the element (percentage)
+      const relativeX = ((e.clientX - rect.left) / rect.width) * 100;
+      const relativeY = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      // Calculate position relative to the page
+      const pageX = e.pageX;
+      const pageY = e.pageY;
+      
+      // Calculate position relative to the viewport
+      const viewportX = e.clientX;
+      const viewportY = e.clientY;
+      
+      trackEvent('click', {
+        target: {
+          tagName: element.tagName.toLowerCase(),
+          id: element.id || '',
+          category,
+          label,
+          width: rect.width,
+          height: rect.height,
+          pageIdentifier: pageIdentifier || window.location.pathname
+        },
+        position: {
+          x: e.clientX,
+          y: e.clientY,
+          pageX,
+          pageY,
+          viewportX,
+          viewportY, 
+          relativeX,
+          relativeY,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        }
+      });
+    };
+
+    element.addEventListener('click', handleClick);
+    return () => element.removeEventListener('click', handleClick);
+  }, [ref, category, label, pageIdentifier, trackEvent]);
+}
+
+// global click tracking for heat maps
+export function usePageHeatMapTracking(pageIdentifier?: string): void {
+  const { trackEvent } = useTracking();
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleClick = (e: MouseEvent) => {
+      // Only track clicks on the page body, not on interactive elements
+      if (
+        e.target instanceof HTMLButtonElement ||
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLAnchorElement ||
+        e.target instanceof HTMLSelectElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return; // Skip interactive elements as they'll be tracked separately
+      }
+      
+      const targetElement = e.target as HTMLElement;
+      
+      trackEvent('heatmap_click', {
+        target: {
+          tagName: targetElement?.tagName?.toLowerCase() || 'unknown',
+          id: targetElement?.id || '',
+          className: targetElement?.className || '',
+          pageIdentifier: pageIdentifier || window.location.pathname
+        },
+        position: {
+          x: e.clientX,
+          y: e.clientY,
+          pageX: e.pageX,
+          pageY: e.pageY,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        }
+      });
+    };
+
+    document.body.addEventListener('click', handleClick);
+    return () => document.body.removeEventListener('click', handleClick);
+  }, [pageIdentifier, trackEvent]);
 }
 
 // Track form submissions
