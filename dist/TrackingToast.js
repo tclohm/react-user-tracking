@@ -9,7 +9,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 import React, { useState, useEffect } from 'react';
 import { useTracking } from './TrackingContext';
-import '/index.css';
+import './index.css';
 export default function TrackingToast(_a) {
     var _b = _a.privacyUrl, privacyUrl = _b === void 0 ? '/privacy' : _b;
     var _c = useTracking(), events = _c.events, sessionId = _c.sessionId;
