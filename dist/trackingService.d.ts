@@ -6,6 +6,12 @@ export interface TrackingConfig {
 export interface PositionData {
     x: number;
     y: number;
+    pageX?: number;
+    pageY?: number;
+    viewportX?: number;
+    viewportY?: number;
+    relativeX?: number;
+    relativeY?: number;
     viewportWidth?: number;
     viewportHeight?: number;
     scrollX?: number;
@@ -15,6 +21,7 @@ export interface TargetData {
     tagName?: string;
     id?: string;
     class?: string;
+    className?: string;
     formName?: string;
     formId?: string;
     formAction?: string;
@@ -22,6 +29,9 @@ export interface TargetData {
     category?: string;
     label?: string;
     value?: number;
+    pageIdentifier?: string;
+    width?: number;
+    height?: number;
     fields?: Array<{
         name: string;
         type: string;

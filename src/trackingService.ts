@@ -41,6 +41,7 @@ export interface TargetData {
   fields?: Array<{name: string; type: string; hasValue: boolean}>;
   // Needed for nested targets
   target?: TrackingEvent;  // nested event references
+}
 
 export interface DeviceData {
   type: 'desktop' | 'mobile' | 'tablet';
