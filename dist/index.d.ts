@@ -1,5 +1,5 @@
 export { TrackingProvider, useTracking, usePageViewTracking, useClickTracking, useEnhancedClickTracking, usePageHeatMapTracking, useFormTracking } from './TrackingContext';
-export { default as TrackingToast } from './TrackingToast';
+export { default as TrackingSidebar } from './TrackingSidebar';
 export { default as HeatMapVisualization } from './HeatMapVisualization';
 export { default as HeatMapOverlay } from './HeatMapOverlay';
 export { default as trackingService } from './trackingService';
